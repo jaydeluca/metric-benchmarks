@@ -18,26 +18,27 @@ dependencies {
     implementation("io.dropwizard.metrics:metrics-core:4.2.0")
     implementation("io.micrometer:micrometer-registry-statsd:latest.release")
 
-    implementation(platform("io.opentelemetry:opentelemetry-bom:1.34.1"))
-    implementation(platform("io.opentelemetry:opentelemetry-bom-alpha:1.34.1-alpha"))
-    implementation("io.opentelemetry:opentelemetry-exporter-otlp:1.34.1")
+    // OpenTelemetry BOM - manages versions for all OpenTelemetry dependencies
+    implementation(platform("io.opentelemetry:opentelemetry-bom:1.55.0"))
 
-    implementation("io.opentelemetry:opentelemetry-exporter-logging:1.34.1")
-    implementation("io.opentelemetry.semconv:opentelemetry-semconv:1.23.1-alpha")
-
+    // OpenTelemetry dependencies - versions managed by BOM
     implementation("io.opentelemetry:opentelemetry-api")
-    implementation("io.opentelemetry:opentelemetry-exporter-prometheus")
+    implementation("io.opentelemetry:opentelemetry-sdk")
+    implementation("io.opentelemetry:opentelemetry-sdk-metrics")
+    implementation("io.opentelemetry:opentelemetry-exporter-otlp")
+    implementation("io.opentelemetry:opentelemetry-exporter-logging")
     implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
 
     implementation("io.prometheus:simpleclient:0.16.0")
-
+    implementation("io.prometheus:prometheus-metrics-core:1.4.2")
 }
 
 tasks.test {
     useJUnitPlatform()
 }
+
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 jmh {

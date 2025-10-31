@@ -15,11 +15,11 @@ class MicrometerPlayground {
         // Micrometer
         val registry = SimpleMeterRegistry()
         val micrometerCounter: io.micrometer.core.instrument.Counter = registry.counter("micrometer.counter")
-        val counterWithTags: io.micrometer.core.instrument.Counter = io.micrometer.core.instrument.Counter
-            .builder("micrometer.counter2")
-            .baseUnit("units")
-            .tags("environment", "production", "service", "test")
-            .register(registry)
+//        val counterWithTags: io.micrometer.core.instrument.Counter = io.micrometer.core.instrument.Counter
+//            .builder("micrometer.counter2")
+//            .baseUnit("units")
+//            .tags("environment", "production", "service", "test")
+//            .register(registry)
 
         while (true) {
             micrometerCounter.increment()
