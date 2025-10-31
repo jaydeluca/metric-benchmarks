@@ -1,6 +1,7 @@
 package main
 
 import com.codahale.metrics.MetricRegistry
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.BenchmarkMode
 import org.openjdk.jmh.annotations.Mode
@@ -12,7 +13,7 @@ import kotlin.random.Random
 
 @State(Scope.Thread)
 @BenchmarkMode(Mode.Throughput)
-class TimerAllocations {
+open class TimerBenchmark {
 
     /**
      * Generates a dataset with random key-value pairs.
@@ -37,31 +38,38 @@ class TimerAllocations {
 
     private val datasetSize = 100000 // Change this to change the dataset size
     private val keyRange = 0..1000 // Key range, inclusive
-    private val valueRange = 20..3000 // Value range, inclusive
+    private val valueRange = 20..3000 // Value range, inclusive (represents milliseconds)
     private val dataset = generateDataset(datasetSize, keyRange, valueRange)
 
-    @Benchmark
-    fun timers() {
-        val metricRegistry = MetricRegistry()
+    companion object {
+        @State(Scope.Benchmark)
+        open class DropwizardMetrics {
+            val metricRegistry = MetricRegistry()
+        }
 
+        @State(Scope.Benchmark)
+        open class MicrometerMetrics {
+            val meterRegistry = SimpleMeterRegistry()
+        }
+    }
+
+    @Benchmark
+    fun dropwizard(dropwizardMetrics: DropwizardMetrics) {
         dataset.forEach { (frameRenderSpeed, countOfFrames) ->
             repeat(countOfFrames) {
-                metricRegistry.timer("time")
+                dropwizardMetrics.metricRegistry.timer("dropwizard.timer")
                     .update(frameRenderSpeed.toLong(), TimeUnit.MILLISECONDS)
             }
         }
     }
 
     @Benchmark
-    fun histogram() {
-        val metricRegistry = MetricRegistry()
-
+    fun micrometer(micrometerMetrics: MicrometerMetrics) {
         dataset.forEach { (frameRenderSpeed, countOfFrames) ->
             repeat(countOfFrames) {
-                metricRegistry.timer("time")
-                    .update(frameRenderSpeed.toLong(), TimeUnit.MILLISECONDS)
+                micrometerMetrics.meterRegistry.timer("micrometer.timer")
+                    .record(frameRenderSpeed.toLong(), TimeUnit.MILLISECONDS)
             }
         }
     }
-
 }

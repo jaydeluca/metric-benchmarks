@@ -11,6 +11,7 @@ import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.metrics.SdkMeterProvider
 import io.opentelemetry.sdk.resources.Resource
 import io.prometheus.client.Counter
+
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.BenchmarkMode
 import org.openjdk.jmh.annotations.Mode
@@ -46,7 +47,7 @@ open class CounterBenchmark {
         }
 
         @State(Scope.Benchmark)
-        open class PrometheusCounter {
+        open class SimplePrometheusCounter {
             val counter: Counter = Counter.Builder()
                 .name("test")
                 .help("help")
@@ -57,6 +58,20 @@ open class CounterBenchmark {
                 .help("help")
                 .labelNames("environment", "service")
                 .create()
+        }
+
+        @State(Scope.Benchmark)
+        open class PrometheusCounter {
+            val counter: io.prometheus.metrics.core.metrics.Counter = io.prometheus.metrics.core.metrics.Counter.builder()
+                .name("test")
+                .help("help")
+                .register()
+
+            val counterWithLabels: io.prometheus.metrics.core.metrics.Counter = io.prometheus.metrics.core.metrics.Counter.builder()
+                .name("test2")
+                .help("help")
+                .labelNames("environment", "service")
+                .register()
         }
 
 
@@ -123,7 +138,15 @@ open class CounterBenchmark {
     }
 
     @Benchmark
-    fun prometheus(prometheusCounter: PrometheusCounter): Counter? {
+    fun prometheusSimple(simplePrometheusCounter: SimplePrometheusCounter): Counter {
+        repeat(repetitions) {
+            simplePrometheusCounter.counter.inc()
+        }
+        return simplePrometheusCounter.counter
+    }
+
+    @Benchmark
+    fun prometheus(prometheusCounter: PrometheusCounter): io.prometheus.metrics.core.metrics.Counter {
         repeat(repetitions) {
             prometheusCounter.counter.inc()
         }
@@ -131,9 +154,17 @@ open class CounterBenchmark {
     }
 
     @Benchmark
-    fun prometheusWithLabels(prometheusCounter: PrometheusCounter): Counter? {
+    fun simplePrometheusWithLabels(simplePrometheusCounter: SimplePrometheusCounter): Counter {
         repeat(repetitions) {
-            prometheusCounter.counterWithLabels.labels("production", "test").inc()
+            simplePrometheusCounter.counterWithLabels.labels("production", "test").inc()
+        }
+        return simplePrometheusCounter.counterWithLabels
+    }
+
+    @Benchmark
+    fun prometheusWithLabels(prometheusCounter: PrometheusCounter): io.prometheus.metrics.core.metrics.Counter {
+        repeat(repetitions) {
+            prometheusCounter.counterWithLabels.labelValues("production", "test").inc()
         }
         return prometheusCounter.counterWithLabels
     }
